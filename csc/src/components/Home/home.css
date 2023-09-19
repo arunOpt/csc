@@ -1,0 +1,23 @@
+.center{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.Home{
+    background-color: rgb(144, 204, 144);
+    min-height: 100vh;
+}
+.Home hr{
+    background-color: rgb(144, 204, 144);
+    height: 12px;
+    border: 0;
+    box-shadow: inset 0 12px 12px -12px green;
+}
+.Home main{
+    /* display: fle */
+    text-align: center;
+}
+.Home h1{
+text-align: center;
+color: green;
+}

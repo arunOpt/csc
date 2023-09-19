@@ -1,0 +1,9 @@
+venv
+node_modules
+wsgi_handler.py
+serverless_wsgi.py
+.serverless-wsgi
+serverless_sdk
+.serverless
+.env
+__pycache__

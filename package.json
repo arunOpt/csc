@@ -1,0 +1,13 @@
+{
+    "name": "csc",
+    "version": "1.0.0",
+    "description": "customer support chatbot",
+    "author": "ARUN SURENDHARAN",
+    "scripts": {
+        "git": "git add . && git commit -m ",
+        "postgit": "git push"
+    },
+    "devDependencies": {
+        "serverless-s3-sync": "^3.2.0"
+    }
+}

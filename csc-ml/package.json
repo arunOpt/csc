@@ -1,0 +1,13 @@
+{
+  "name": "csc-ml",
+  "version": "1.0.0",
+  "description": "customer support chatbot python ml module",
+  "author": "ARUN SURENDHARAN",
+  "scripts": {
+    "dev":"serverless wsgi serve"
+  },
+  "devDependencies": {
+    "serverless-python-requirements": "^6.0.0",
+    "serverless-wsgi": "^3.0.1"
+  }
+}

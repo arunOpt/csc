@@ -1,0 +1,38 @@
+org: arunopt
+app: csc-ml
+service: csc-ml
+
+frameworkVersion: "3"
+
+custom:
+  wsgi:
+    app: src/routes/app.app
+
+provider:
+  name: aws
+  runtime: python3.10
+
+functions:
+  api:
+    handler: wsgi_handler.handler
+    events:
+      - httpApi:
+          method: POST
+          path: /your-api-path
+      httpApi:
+        authorizer:
+          name: customAuthorizer
+          arn: arn:aws:lambda:your-region:your-account-id:function:your-custom-authorizer
+resources:
+  Resources:
+    CustomAuthorizerFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        Handler: custom_authorizer.handler
+        Runtime: python3.10
+        Role: arn:aws:iam::your-account-id:role/your-custom-authorizer-role
+        FunctionName: your-custom-authorizer
+        Timeout: 5
+plugins:
+  - serverless-wsgi
+  - serverless-python-requirements

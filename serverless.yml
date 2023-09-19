@@ -1,0 +1,90 @@
+service: csc
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: dev
+  region: us-east-1
+
+plugins:
+  - serverless-s3-sync
+
+resources:
+  Resources:
+    S3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+        OwnershipControls:
+          Rules:
+            - ObjectOwnership: ObjectWriter
+        WebsiteConfiguration:
+          IndexDocument: ${self:custom.distributionIndex}
+          ErrorDocument: ${self:custom.distributionIndex}
+        BucketName: ${self:custom.hostedZoneName}
+
+    CloudFrontDistribution:
+      Type: AWS::CloudFront::Distribution
+      Properties:
+        DistributionConfig:
+          Comment: CloudFront Distribution for my React app
+          Enabled: true
+          DefaultRootObject: ${self:custom.distributionIndex}
+          DefaultCacheBehavior:
+            TargetOriginId: S3BucketOrigin
+            ForwardedValues:
+              QueryString: "false"
+            ViewerProtocolPolicy: redirect-to-https
+          Origins:
+            - DomainName: !GetAtt S3Bucket.DomainName
+              Id: S3BucketOrigin
+              S3OriginConfig:
+                OriginAccessIdentity: ""
+    StaticSiteS3BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket:
+          Ref: S3Bucket
+        PolicyDocument:
+          Statement:
+            - Sid: CloudFrontOnly
+              Effect: Allow
+              Principal: "*"
+              Action:
+                - s3:GetObject
+              Resource:
+                Fn::Join: ["", ["arn:aws:s3:::", { "Ref": "S3Bucket" }, "/*"]]
+              Condition:
+                StringEquals:
+                  aws:SourceVpce: !GetAtt CloudFrontDistribution.DomainName
+    DnsRecord:
+      Type: "AWS::Route53::RecordSet"
+      Properties:
+        AliasTarget:
+          DNSName: ${self:custom.aliasDNSName}
+          HostedZoneId: ${self:custom.aliasHostedZoneId}
+        HostedZoneName: ${self:custom.hostedZoneName}.
+        Name:
+          Ref: S3Bucket
+        Type: "A"
+
+  Outputs:
+    WebsiteURL:
+      Description: URL for the deployed React app
+      Value:
+        Fn::GetAtt:
+          - CloudFrontDistribution
+          - DomainName
+custom:
+  distributionIndex: index.html
+  hostedZoneName: csc.arunsurendharan.com
+  aliasHostedZoneId: Z3AQBSTGFYJSTF # us-east-1
+  aliasDNSName: s3-website-us-east-1.amazonaws.com
+  s3Sync:
+    - bucketName: ${self:custom.hostedZoneName}
+      localDir: frontend/build
+  # s3Sync:
+  #   - bucketName: ${self:custom.siteName}
+  #     localDir: frontend/build
