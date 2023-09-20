@@ -8,6 +8,7 @@
         "postgit": "git push"
     },
     "devDependencies": {
+        "serverless-python-requirements": "^6.0.0",
         "serverless-s3-sync": "^3.2.0"
     }
 }

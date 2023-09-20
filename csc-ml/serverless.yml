@@ -1,5 +1,5 @@
-org: arunopt
-app: csc-ml
+# org: arunopt
+# app: csc-ml
 service: csc-ml
 
 frameworkVersion: "3"
@@ -11,28 +11,64 @@ custom:
 provider:
   name: aws
   runtime: python3.10
+  # runtime: nodejs18.x
+  region: us-east-1 # Change this to your desired region
+  # websocketsApiName: websocket-api-${self:provider.stage}
+  stage: ${opt:stage, 'dev'}
+  # environment:
+  #   DYNAMODB_TABLE: ${self:service}-${self:provider.stage}
+  # iamRoleStatements:
+  #   - Effect: Allow
+  #     Action:
+  #       - dynamodb:Query
+  #       - dynamodb:Scan
+  #       - dynamodb:GetItem
+  #       - dynamodb:PutItem
+  #       - dynamodb:UpdateItem
+  #       - dynamodb:DeleteItem
+  #     Resource:
+  #       - "arn:aws:dynamodb:us-east-1:YOUR_ACCOUNT_ID:table/${self:provider.environment.DYNAMODB_TABLE}"
 
+plugins:
+  - serverless-wsgi
+  - serverless-python-requirements
 functions:
   api:
     handler: wsgi_handler.handler
     events:
-      - httpApi:
-          method: POST
-          path: /your-api-path
-      httpApi:
-        authorizer:
-          name: customAuthorizer
-          arn: arn:aws:lambda:your-region:your-account-id:function:your-custom-authorizer
-resources:
-  Resources:
-    CustomAuthorizerFunction:
-      Type: AWS::Lambda::Function
-      Properties:
-        Handler: custom_authorizer.handler
-        Runtime: python3.10
-        Role: arn:aws:iam::your-account-id:role/your-custom-authorizer-role
-        FunctionName: your-custom-authorizer
-        Timeout: 5
-plugins:
-  - serverless-wsgi
-  - serverless-python-requirements
+      - http:
+          method: post
+          path: /api/chatbot
+          # authorizer: auth
+          cors:
+            origin:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - "*"
+  #         authorizer: authorizerFunc
+  # authorizerFunc:
+  #   handler: handler.authorizerFunc
+  # cors: true
+#       - httpApi:
+#           authorizer:
+#             name: customAuthorizer
+#             arn: arn:aws:lambda:your-region:your-account-id:function:your-custom-authorizer
+# resources:
+#   Resources:
+#     CustomAuthorizerFunction:
+#       Type: AWS::Lambda::Function
+#       Properties:
+#         Handler: custom_authorizer.handler
+#         Runtime: python3.10
+#         Role: arn:aws:iam::your-account-id:role/your-custom-authorizer-role
+#         FunctionName: your-custom-authorizer
+#         Timeout: 5
+package:
+  exclude:
+    - node_modules/**
+    - venv/**

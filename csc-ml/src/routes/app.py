@@ -8,7 +8,7 @@ app = Flask(__name__)
 loader = WebBaseLoader("https://www.optisolbusiness.com")
 index = VectorstoreIndexCreator().from_loaders([loader])
 
-@app.route('/chatbot', methods=['POST'])
+@app.route('/api/chatbot', methods=['POST'])
 def chatbot():
     data = request.get_json()
     question = data.get('question')

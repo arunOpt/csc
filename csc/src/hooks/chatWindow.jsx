@@ -21,7 +21,7 @@ const useChatWindow=()=>{
       setMessages(tempMessages);
       setInputMessage("");
       scrollToBottom();
-await axios.post(`${config.backendUrl}/api`, {
+await axios.post(`${config.backendUrl}/chatbot`, {
     question: inputMessage,
   })
   .then(function (response) {

@@ -30,7 +30,7 @@ const Chatbot = () => {
           <div className="chatbot-input">
             <input
               type="text"
-              placeholder="Type a message..."
+              placeholder="Type your query regarding optisol..."
               value={inputMessage}
               onChange={handleInputChange}
               onKeyDown={handleInputKeyDown}
