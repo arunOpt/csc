@@ -39,18 +39,8 @@ functions:
       - http:
           method: post
           path: /api/chatbot
-          # authorizer: auth
-          cors:
-            origin:
-              - "*"
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - "*"
-  #         authorizer: authorizerFunc
+          cors: true
+          # authorizer: authizerFunc
   # authorizerFunc:
   #   handler: handler.authorizerFunc
   # cors: true

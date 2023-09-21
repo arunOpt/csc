@@ -21,20 +21,22 @@ const useChatWindow=()=>{
       setMessages(tempMessages);
       setInputMessage("");
       scrollToBottom();
+      
 await axios.post(`${config.backendUrl}/chatbot`, {
     question: inputMessage,
   })
   .then(function (response) {
     const botResponse = {
-        text: "response",
+        text:response?.data?.message,
         type: "bot",
       };
       setMessages([...tempMessages, botResponse]);
       scrollToBottom();
   })
   .catch(function (error) {
+    console.log(error);
     const botResponse = {
-        text: error,
+        text: "Error connecting... please try again",
         type: "bot",
       };
       setMessages([...tempMessages, botResponse]);
