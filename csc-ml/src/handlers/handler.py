@@ -3,12 +3,20 @@ import json
 import jwt
 import logging
 import time
+import dotenv
+dotenv.load_dotenv()
+from flask import Flask, jsonify,request, make_response
+from langchain.document_loaders import WebBaseLoader
+from langchain.indexes import VectorstoreIndexCreator
 
 logger = logging.getLogger("handler_logger")
 logger.setLevel(logging.DEBUG)
 
 dynamodb = boto3.resource("dynamodb")
 
+
+loader = WebBaseLoader("https://www.optisolbusiness.com")
+index = VectorstoreIndexCreator().from_loaders([loader])
 
 def _get_body(event):
     try:
@@ -96,37 +104,6 @@ def default_message(event, context):
     return _get_response(400, "Unrecognized WebSocket action.")
 
 
-def get_recent_messages(event, context):
-    """
-    Return the 10 most recent chat messages.
-    """
-    connectionID = event["requestContext"].get("connectionId")
-    logger.info("Retrieving most recent messages for CID '{}'"\
-            .format(connectionID))
-
-    # Ensure connectionID is set
-    if not connectionID:
-        logger.error("Failed: connectionId value not set.")
-        return _get_response(500, "connectionId value not set.")
-
-    # Get the 10 most recent chat messages
-    table = dynamodb.Table("serverless-chat_Messages")
-    response = table.query(KeyConditionExpression="Room = :room",
-            ExpressionAttributeValues={":room": "general"},
-            Limit=10, ScanIndexForward=False)
-    items = response.get("Items", [])
-
-    # Extract the relevant data and order chronologically
-    messages = [{"username": x["Username"], "content": x["Content"]}
-            for x in items]
-    messages.reverse()
-
-    # Send them to the client who asked for it
-    data = {"messages": messages}
-    _send_to_connection(connectionID, data, event)
-
-    return _get_response(200, "Sent recent messages to '{}'."\
-            .format(connectionID))
 
 
 def send_message(event, context):
@@ -184,16 +161,16 @@ def send_message(event, context):
     # Send the message data to all connections
     message = {"username": username, "content": content}
     logger.debug("Broadcasting message: {}".format(message))
-    data = {"messages": [message]}
+    
+    question =body['question']
+    answer=index.query(question)
+
+    data = {"messages": [answer]}
+
+
     for connectionID in connections:
         _send_to_connection(connectionID, data, event)
     return _get_response(200, "Message sent to {} connections."\
             .format(len(connections)))
 
-def ping(event, context):
-    """
-    Sanity check endpoint that echoes back 'PONG' to the sender.
-    """
-    logger.info("Ping requested.")
-    return _get_response(200, "PONG!")
 

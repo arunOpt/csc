@@ -1,7 +1,6 @@
 import "./Chatbot.css"; 
 import chatbotIcon from "../../assets/bot-img.svg"; 
 import useChatWindow from "../../hooks/chatWindow";
-
 const Chatbot = () => {
  const {
   messages,
@@ -10,14 +9,15 @@ const Chatbot = () => {
   handleInputChange,
   handleInputKeyDown,
   handleSendMessage,
-  toggleMinimize
-}=useChatWindow()
+  toggleMinimize,
+ 
+}=useChatWindow( )
   return (
     <>
       {!isMinimized ? (
         <div className={`chatbot-container`}>
           <div className="chatbot-header" onClick={toggleMinimize}>
-            <span>Chatbot</span>
+            <span>Customer Support Chatbot</span>
             <button>{isMinimized ? "+" : "-"}</button>
           </div>
           <div className="chatbot-messages">

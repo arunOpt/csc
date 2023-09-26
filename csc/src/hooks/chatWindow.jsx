@@ -1,11 +1,39 @@
 import  { useRef, useEffect,useState } from "react";
-import axios from "axios"
+import  { io }  from 'socket.io-client' 
+// import axios from "axios"
 import { config } from "../config";
 const useChatWindow=()=>{
+  const socket = io(config.socketEndPoint);
     const [messages, setMessages] = useState([]);
     const [inputMessage, setInputMessage] = useState("");
     const [isMinimized, setIsMinimized] = useState(false);
     const chatContainerRef = useRef(null);
+
+    
+
+    useEffect(() => {
+
+      socket.on("connect", () => {
+        console.log(socket.id); 
+      });
+      
+      socket.on("disconnect", () => {
+        console.log(socket.id); 
+      });
+
+      socket.on("chatBot", (msg) => {
+        console.log(msg, "msg"); 
+        const tempMessages=[...messages]
+        const botResponse = {
+          text: msg,
+          type: "bot",
+        };
+        setMessages([...tempMessages, botResponse]);
+        scrollToBottom();
+      });
+  
+    },[socket])
+    
     const handleInputChange = (e) => {
       setInputMessage(e.target.value);
     };
@@ -21,27 +49,28 @@ const useChatWindow=()=>{
       setMessages(tempMessages);
       setInputMessage("");
       scrollToBottom();
+      socket.emit("chatBot",{ question: inputMessage} )
       
-await axios.post(`${config.backendUrl}/chatbot`, {
-    question: inputMessage,
-  })
-  .then(function (response) {
-    const botResponse = {
-        text:response?.data?.message,
-        type: "bot",
-      };
-      setMessages([...tempMessages, botResponse]);
-      scrollToBottom();
-  })
-  .catch(function (error) {
-    console.log(error);
-    const botResponse = {
-        text: "Error connecting... please try again",
-        type: "bot",
-      };
-      setMessages([...tempMessages, botResponse]);
-      scrollToBottom();
-  });
+// await axios.post(`${config.backendUrl}/chatbot`, {
+//     question: inputMessage,
+//   })
+//   .then(function (response) {
+//     const botResponse = {
+//         text:response?.data?.message,
+//         type: "bot",
+//       };
+//       setMessages([...tempMessages, botResponse]);
+//       scrollToBottom();
+//   })
+//   .catch(function (error) {
+//     console.log(error);
+//     const botResponse = {
+//         text: "Error connecting... please try again",
+//         type: "bot",
+//       };
+//       setMessages([...tempMessages, botResponse]);
+//       scrollToBottom();
+//   });
     };
   
     const toggleMinimize = () => {

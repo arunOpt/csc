@@ -7,3 +7,4 @@ serverless_sdk
 .serverless
 .env
 __pycache__
+.requirements.zip

@@ -89,6 +89,7 @@ custom:
   #   - bucketName: ${self:custom.siteName}
   #     localDir: frontend/build
 package:
-  exclude:
-    - node_modules/**
-    - venv/**
+  patterns:
+    - "!node_modules/**"
+    - "!tmp/**"
+    - "!.git/**"

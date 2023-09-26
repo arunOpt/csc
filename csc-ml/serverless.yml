@@ -1,38 +1,58 @@
-# org: arunopt
-# app: csc-ml
+org: arunopt
+app: csc-ml
 service: csc-ml
 
 frameworkVersion: "3"
 
-custom:
-  wsgi:
-    app: src/routes/app.app
-
 provider:
   name: aws
   runtime: python3.10
-  # runtime: nodejs18.x
-  region: us-east-1 # Change this to your desired region
-  # websocketsApiName: websocket-api-${self:provider.stage}
+  region: us-east-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "execute-api:ManageConnections"
+      Resource:
+        - "arn:aws:execute-api:*:*:**/@connections/*"
+    - Effect: Allow
+      Action:
+        - "dynamodb:PutItem"
+        - "dynamodb:GetItem"
+        - "dynamodb:UpdateItem"
+        - "dynamodb:DeleteItem"
+        - "dynamodb:BatchGetItem"
+        - "dynamodb:BatchWriteItem"
+        - "dynamodb:Scan"
+        - "dynamodb:Query"
+      Resource:
+        - "arn:aws:dynamodb:us-east-1:*:*"
   stage: ${opt:stage, 'dev'}
-  # environment:
-  #   DYNAMODB_TABLE: ${self:service}-${self:provider.stage}
-  # iamRoleStatements:
-  #   - Effect: Allow
-  #     Action:
-  #       - dynamodb:Query
-  #       - dynamodb:Scan
-  #       - dynamodb:GetItem
-  #       - dynamodb:PutItem
-  #       - dynamodb:UpdateItem
-  #       - dynamodb:DeleteItem
-  #     Resource:
-  #       - "arn:aws:dynamodb:us-east-1:YOUR_ACCOUNT_ID:table/${self:provider.environment.DYNAMODB_TABLE}"
 
 plugins:
   - serverless-wsgi
   - serverless-python-requirements
 functions:
+  connectionManager:
+    handler: src/handlers/handler.connection_manager
+    events:
+      - websocket:
+          route: $connect
+          cors: true
+      - websocket:
+          route: $disconnect
+          cors: true
+  defaultMessage:
+    handler: src/handlers/handler.default_message
+    events:
+      - websocket:
+          route: $default
+          cors: true
+  sendMessage:
+    handler: src/handlers/handler.send_message
+    events:
+      - websocket:
+          route: chatBot
+          cors: true
   api:
     handler: wsgi_handler.handler
     events:
@@ -40,25 +60,35 @@ functions:
           method: post
           path: /api/chatbot
           cors: true
-          # authorizer: authizerFunc
-  # authorizerFunc:
-  #   handler: handler.authorizerFunc
-  # cors: true
-#       - httpApi:
-#           authorizer:
-#             name: customAuthorizer
-#             arn: arn:aws:lambda:your-region:your-account-id:function:your-custom-authorizer
-# resources:
-#   Resources:
-#     CustomAuthorizerFunction:
-#       Type: AWS::Lambda::Function
-#       Properties:
-#         Handler: custom_authorizer.handler
-#         Runtime: python3.10
-#         Role: arn:aws:iam::your-account-id:role/your-custom-authorizer-role
-#         FunctionName: your-custom-authorizer
-#         Timeout: 5
 package:
+  individually: true
   exclude:
     - node_modules/**
-    - venv/**
+    - model/**
+    - .vscode/**
+  patterns:
+    - "!node_modules/**"
+    - "!venv/**"
+    - "!tmp/**"
+    - "!.git/**"
+
+custom:
+  pythonRequirements:
+    dockerizePip: non-linux
+    zip: true
+    slim: true
+    noDeploy:
+      - boto3
+      - botocore
+      - docutils
+      - jmespath
+      - pip
+      - python-dateutil
+      - s3transfer
+      - setuptools
+      - six
+      - tensorboard
+    # dockerizePip: true
+    # noDeploy: []
+  wsgi:
+    app: src/routes/app.app
